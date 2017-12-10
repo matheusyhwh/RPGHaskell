@@ -91,3 +91,16 @@ setHpToMax j = Player (nomeDoJogador j) (hpMaxDoJogador j) (hpMaxDoJogador j) (v
 {-Deixa o player full de mana-}
 setManaToMax :: Player -> Player
 setManaToMax j = Player (nomeDoJogador j) (hpDoJogador j) (hpMaxDoJogador j) (velocidadeDoJogador j) (expDoJogador j) (ataqueDoJogador j) (danoMagicoDoJogador j) (defesaDoJogador j) (defesaMagicaDoJogador j) (controlNivelDoJogador j) (nivelDoJogador j) (manaMaxDoJogador j) (manaMaxDoJogador j) (jogadorIsAlive j)
+
+{-Funcoes que realizam os calculos do dano fisico e do dano magico abaixo-}
+calculaDanoFisico :: Double -> Double -> Double
+calculaDanoFisico dano defesa = (dano / ((defesa/100) + 1))
+
+calculaDanoMagico :: Double -> Double -> Double
+calculaDanoMagico danoMagico defesaMagica = (danoMagico / ((defesaMagica / 100) + 1))
+
+{-Atualiza o hp do player quando recebe o dano do inimigo, retornando um novo player com hp atualizado e morto se for o caso (recebe o dano e o jogador)-}
+receiveDamageByEnemy :: Int -> Player -> Player
+receiveDamageByEnemy dano j
+    | (((hpDoJogador j) - dano) <= 0) = Player (nomeDoJogador j) ((hpDoJogador j) - dano) (hpMaxDoJogador j) (velocidadeDoJogador j) (expDoJogador j) (ataqueDoJogador j) (danoMagicoDoJogador j) (defesaDoJogador j) (defesaMagicaDoJogador j) (controlNivelDoJogador j) (nivelDoJogador j) (manaDoJogador j) (manaMaxDoJogador j) (False)
+    | otherwise = Player (nomeDoJogador j) ((hpDoJogador j) - dano) (hpMaxDoJogador j) (velocidadeDoJogador j) (expDoJogador j) (ataqueDoJogador j) (danoMagicoDoJogador j) (defesaDoJogador j) (defesaMagicaDoJogador j) (controlNivelDoJogador j) (nivelDoJogador j) (manaDoJogador j) (manaMaxDoJogador j) (jogadorIsAlive j)
