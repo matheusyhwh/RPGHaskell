@@ -104,3 +104,10 @@ receiveDamageByEnemy :: Int -> Player -> Player
 receiveDamageByEnemy dano j
     | (((hpDoJogador j) - dano) <= 0) = Player (nomeDoJogador j) ((hpDoJogador j) - dano) (hpMaxDoJogador j) (velocidadeDoJogador j) (expDoJogador j) (ataqueDoJogador j) (danoMagicoDoJogador j) (defesaDoJogador j) (defesaMagicaDoJogador j) (controlNivelDoJogador j) (nivelDoJogador j) (manaDoJogador j) (manaMaxDoJogador j) (False)
     | otherwise = Player (nomeDoJogador j) ((hpDoJogador j) - dano) (hpMaxDoJogador j) (velocidadeDoJogador j) (expDoJogador j) (ataqueDoJogador j) (danoMagicoDoJogador j) (defesaDoJogador j) (defesaMagicaDoJogador j) (controlNivelDoJogador j) (nivelDoJogador j) (manaDoJogador j) (manaMaxDoJogador j) (jogadorIsAlive j)
+
+{-Funcao que cura um personagem: "Funcao que enche o hp do personagem ao custo de mana"-}
+curaPlayer :: Player -> Player
+curaPlayer j
+    | (totalDeCura) + (hpDoJogador j) >= hpMaxDoJogador j = Player (nomeDoJogador j) (hpMaxDoJogador j) (hpMaxDoJogador j) (velocidadeDoJogador j) (expDoJogador j) (ataqueDoJogador j) (danoMagicoDoJogador j) (defesaDoJogador j) (defesaMagicaDoJogador j) (controlNivelDoJogador j) (nivelDoJogador j) ((manaDoJogador j) - (10 * (nivelDoJogador j))) (manaMaxDoJogador j) (jogadorIsAlive j)
+    | otherwise = Player (nomeDoJogador j) ((hpDoJogador j) + totalDeCura) (hpMaxDoJogador j) (velocidadeDoJogador j) (expDoJogador j) (ataqueDoJogador j) (danoMagicoDoJogador j) (defesaDoJogador j) (defesaMagicaDoJogador j) (controlNivelDoJogador j) (nivelDoJogador j) ((manaDoJogador j) - (10 * (nivelDoJogador j))) (manaMaxDoJogador j) (jogadorIsAlive j)
+    where totalDeCura = (hpMaxDoJogador j) `div` 2 {-Usar `div` sempre que tiver uma divisao de inteiros e se quiser um resultado inteiro-}
