@@ -111,3 +111,30 @@ curaPlayer j
     | (totalDeCura) + (hpDoJogador j) >= hpMaxDoJogador j = Player (nomeDoJogador j) (hpMaxDoJogador j) (hpMaxDoJogador j) (velocidadeDoJogador j) (expDoJogador j) (ataqueDoJogador j) (danoMagicoDoJogador j) (defesaDoJogador j) (defesaMagicaDoJogador j) (controlNivelDoJogador j) (nivelDoJogador j) ((manaDoJogador j) - (10 * (nivelDoJogador j))) (manaMaxDoJogador j) (jogadorIsAlive j)
     | otherwise = Player (nomeDoJogador j) ((hpDoJogador j) + totalDeCura) (hpMaxDoJogador j) (velocidadeDoJogador j) (expDoJogador j) (ataqueDoJogador j) (danoMagicoDoJogador j) (defesaDoJogador j) (defesaMagicaDoJogador j) (controlNivelDoJogador j) (nivelDoJogador j) ((manaDoJogador j) - (10 * (nivelDoJogador j))) (manaMaxDoJogador j) (jogadorIsAlive j)
     where totalDeCura = (hpMaxDoJogador j) `div` 2 {-Usar `div` sempre que tiver uma divisao de inteiros e se quiser um resultado inteiro-}
+
+printSeparator = putStrLn "-------------------------------------------------------------"
+
+printAcoes = do
+                putStrLn ""
+                printSeparator
+                putStrLn "Selecione uma ação :"
+                putStrLn "1 - Atague fisico "
+                putStrLn "2 - Cura  "
+                putStrLn "3 - Magia "
+                printSeparator
+                putStrLn "Digite o numero referente a ação desejada : "
+
+printEscolhas :: Int -> IO()
+printEscolhas 1 = putStrLn "Você ataca o inimigo fisicamente"
+printEscolhas 2 = putStrLn "Você sente que precisa recuperar suas energias"
+printEscolhas 3 = putStrLn "Você resolve chamar as forças aliadas"
+printEscolhas x = putStrLn "Opção invalida : por favor selecione uma opção valida "
+
+--seletorDeAcoes :: Int -> Int -> Int
+seletorDeAcoes j defesa defesaMagica = do
+     printAcoes
+
+     entrada <- getLine
+     let escolha = read entrada :: Int
+     putStr ""
+     printEscolhas escolha
