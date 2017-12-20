@@ -1,4 +1,4 @@
-{-Definicao do tipo "Player" utilizando "sintaxe de registro" (cria funcoes automaticamente para acessar os valores que o tipo pode assumir) -}
+﻿{-Definicao do tipo "Player" utilizando "sintaxe de registro" (cria funcoes automaticamente para acessar os valores que o tipo pode assumir) -}
 data Player = Player { nomeDoJogador :: String
                      , hpDoJogador :: Int
                      , hpMaxDoJogador :: Int
@@ -42,6 +42,10 @@ data Inimigo = Inimigo { nomeDoInimigo :: String
 {-Funcao que recebe o nome do player e o cria com valores padrao-}
 criaPlayer :: String -> Player
 criaPlayer nome = Player nome 300 300 15 0 10 20 10 15 100 1 200 200 True
+{-Cria um Inimigo (Apenas teste) -}
+criaInimigo :: String -> Inimigo
+criaInimigo nome = Inimigo nome 300 300 15 0 10 20  True
+
 
 
 {-Adiciona exp em um player passado no parametro -}
@@ -130,6 +134,31 @@ printEscolhas 2 = putStrLn "Você sente que precisa recuperar suas energias"
 printEscolhas 3 = putStrLn "Você resolve chamar as forças aliadas"
 printEscolhas x = putStrLn "Opção invalida : por favor selecione uma opção valida "
 
+
+gerenciadorDeEscolhas :: Int -> Int -> Int -> Player -> Int  -> (Int , Int , Int)
+gerenciadorDeEscolhas 1 hpJogador manaJogador jogador hpInimigo = do 
+  printEscolhas 1
+  let x = ataqueDoJogador jogador 
+  return ((hpJogador,manaJogador),hpInimigo - x)
+
+gerenciadorDeEscolhas 2 hpJogador manaJogador jogador hpInimigo = do
+  printEscolhas 2
+  return ((hpJogador+10,manaJogador-5),hpInimigo)
+
+gerenciadorDeEscolhas 3 hpJogador manaJogador jogador hpInimigo = do
+  printEscolhas 3
+  return ((hpJogador,manaJogador),hpInimigo )
+  
+  
+  
+  
+
+  
+
+
+
+
+
 --seletorDeAcoes :: Int -> Int -> Int
 seletorDeAcoes j defesa defesaMagica = do
      printAcoes
@@ -138,3 +167,33 @@ seletorDeAcoes j defesa defesaMagica = do
      let escolha = read entrada :: Int
      putStr ""
      printEscolhas escolha
+     
+       
+batleManager :: Int -> Int -> Player -> Inimigo -> Int -> Bool
+batleManager hpJogador manaJogador jogador inimigo hpInimigo | (hpJogador <= 0 || hpInimigo <= 0) = if (hpJogador <= 0) then False else True
+                                                             | otherwise = do
+                                                               printAcoes
+                                                               x <- getLine
+                                                               let escolha = read x :: Int
+                                                               let b = gerenciadorDeEscolhas escolha hpJogador manaJogador jogador hpInimigo
+                                                               batleManager (fst (fst b)) (snd(fst b)) jogador inimigo ( snd b)
+                                                               
+                                                            
+                                                               
+                                                               
+                                                   
+                                                              
+
+
+
+       
+main =  do 
+  print $ "Digite o nome do seu jogador : "
+  nome <- getLine
+  let j =  criaPlayer nome
+  let i = criaInimigo "juju"
+  batleManager (hpDoJogador j) (manaDoJogador j) j i  (hpDoInimigo i)
+  
+  
+ 
+ 
