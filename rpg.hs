@@ -134,21 +134,17 @@ printEscolhas 2 = putStrLn "Você sente que precisa recuperar suas energias"
 printEscolhas 3 = putStrLn "Você resolve chamar as forças aliadas"
 printEscolhas x = putStrLn "Opção invalida : por favor selecione uma opção valida "
 
+receiveDamageByPlayer :: Int -> Inimigo -> Inimigo
+receiveDamageByPlayer dano i | (((hpDoInimigo i) - dano) <= 0) = Inimigo (nomeDoInimigo i) ((hpDoInimigo i)-dano) (velocidadeDoInimigo i) (ataqueDoInimigo i) (defesaDoInimigo i) (defesaMagicaDoInimigo i) (xpDropDoInimigo i) (False)
+                              | otherwise = Inimigo (nomeDoInimigo i) ((hpDoInimigo i)-dano) (velocidadeDoInimigo i) (ataqueDoInimigo i) (defesaDoInimigo i) (defesaMagicaDoInimigo i) (xpDropDoInimigo i) (inimigoIsAlive i)
 
-gerenciadorDeEscolhas :: Int -> Int -> Int -> Player -> Int  -> (Int , Int , Int)
-gerenciadorDeEscolhas 1 hpJogador manaJogador jogador hpInimigo = do 
+
+gerenciadorDeEscolhas :: Int -> Player -> Inimigo ->(Player,Inimigo)
+gerenciadorDeEscolhas 1 jogador inimigo = do 
   printEscolhas 1
-  let x = ataqueDoJogador jogador 
-  return ((hpJogador,manaJogador),hpInimigo - x)
+  let a = receiveDamageByPlayer (ataqueDoJogador jogador) inimigo
+  return (jogador, a )
 
-gerenciadorDeEscolhas 2 hpJogador manaJogador jogador hpInimigo = do
-  printEscolhas 2
-  return ((hpJogador+10,manaJogador-5),hpInimigo)
-
-gerenciadorDeEscolhas 3 hpJogador manaJogador jogador hpInimigo = do
-  printEscolhas 3
-  return ((hpJogador,manaJogador),hpInimigo )
-  
   
   
   
@@ -169,14 +165,17 @@ seletorDeAcoes j defesa defesaMagica = do
      printEscolhas escolha
      
        
-batleManager :: Int -> Int -> Player -> Inimigo -> Int -> Bool
-batleManager hpJogador manaJogador jogador inimigo hpInimigo | (hpJogador <= 0 || hpInimigo <= 0) = if (hpJogador <= 0) then False else True
-                                                             | otherwise = do
-                                                               printAcoes
-                                                               x <- getLine
-                                                               let escolha = read x :: Int
-                                                               let b = gerenciadorDeEscolhas escolha hpJogador manaJogador jogador hpInimigo
-                                                               batleManager (fst (fst b)) (snd(fst b)) jogador inimigo ( snd b)
+batleManager :: Player -> Inimigo -> Bool
+batleManager jogador inimigo  | ( hpDoJogador jogador <= 0 || hpDoInimigo inimigo <= 0) = if (hpDoJogador jogador <= 0) then False else True
+                              | otherwise = do
+                                 printAcoes                              
+                                 x <- getLine
+                                 let escolha = read x :: Int
+                                 let a = gerenciadorDeEscolhas escolha jogador inimigo
+                                 let novoJogador = fst a
+                                 let novoInimigo = snd a
+                                 return batleManager novoJogador novoInimigo
+                                                              
                                                                
                                                             
                                                                
@@ -193,7 +192,3 @@ main =  do
   let j =  criaPlayer nome
   let i = criaInimigo "juju"
   batleManager (hpDoJogador j) (manaDoJogador j) j i  (hpDoInimigo i)
-  
-  
- 
- 
