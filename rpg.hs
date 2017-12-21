@@ -118,6 +118,7 @@ curaPlayer j
 
 printSeparator = putStrLn "-------------------------------------------------------------"
 
+
 printAcoes = do
                 putStrLn ""
                 printSeparator
@@ -135,21 +136,145 @@ printEscolhas 3 = putStrLn "Você resolve chamar as forças aliadas"
 printEscolhas x = putStrLn "Opção invalida : por favor selecione uma opção valida "
 
 receiveDamageByPlayer :: Int -> Inimigo -> Inimigo
-receiveDamageByPlayer dano i | (((hpDoInimigo i) - dano) <= 0) = Inimigo (nomeDoInimigo i) ((hpDoInimigo i)-dano) (velocidadeDoInimigo i) (ataqueDoInimigo i) (defesaDoInimigo i) (defesaMagicaDoInimigo i) (xpDropDoInimigo i) (False)
-                              | otherwise = Inimigo (nomeDoInimigo i) ((hpDoInimigo i)-dano) (velocidadeDoInimigo i) (ataqueDoInimigo i) (defesaDoInimigo i) (defesaMagicaDoInimigo i) (xpDropDoInimigo i) (inimigoIsAlive i)
+receiveDamageByPlayer dano i
+  | (((hpDoInimigo i) - dano) <= 0) = Inimigo (nomeDoInimigo i) ((hpDoInimigo i)-dano) (velocidadeDoInimigo i) (ataqueDoInimigo i) (defesaDoInimigo i) (defesaMagicaDoInimigo i) (xpDropDoInimigo i) (False)
+  | otherwise = Inimigo (nomeDoInimigo i) ((hpDoInimigo i)-dano) (velocidadeDoInimigo i) (ataqueDoInimigo i) (defesaDoInimigo i) (defesaMagicaDoInimigo i) (xpDropDoInimigo i) (inimigoIsAlive i)
 
 
-gerenciadorDeEscolhas :: Int -> Player -> Inimigo ->(Player,Inimigo)
-gerenciadorDeEscolhas 1 jogador inimigo = do 
+{-Nesse caso, nao estamos tratando ainda as multiplas escolhas, estamos fazendo "de conta" que a escolha é sempre a numero 1 (atacar inimigo)-}
+gerenciadorDeEscolhas n jogador inimigo = do
+  printEscolhas 1
+  return (jogador, receiveDamageByPlayer (ataqueDoJogador jogador) inimigo)
+
+
+--seletorDeAcoes :: Int -> Int -> Int
+seletorDeAcoes j defesa defesaMagica = do
+     printAcoes
+
+     entrada <- getLine
+     let escolha = read entrada :: Int
+     putStr ""
+     printEscolhas escolha
+
+
+
+battleManager jogador inimigo
+  | ((hpDoJogador jogador) <= 0) = do
+    print $ "Jogador morto!"
+    return False
+  | ((hpDoInimigo inimigo) <= 0) = do
+    print $ "Inimigo morto!"
+    return True
+  | otherwise = do
+    printAcoes
+    x <- getLine
+    let escolha = read x :: Int
+    a <- gerenciadorDeEscolhas escolha jogador inimigo
+    let novoPlayer = fst a :: Player
+    let novoInimigo = snd a :: Inimigo
+
+    battleManager novoPlayer novoInimigo
+
+
+--Compara um unico atributo de player e inimigo, os valores ja sao dados em inteiros. Retorna +1 Se o player ganhou. Se o inimigo ganhou, retorna -1
+comparaAtributo :: Int -> Int -> Int
+comparaAtributo atributoPlayer atributoInimigo
+  | (atributoPlayer >= atributoInimigo) = 1
+  | otherwise = -1
+
+printInfoGuerreiro :: IO()
+printInfoGuerreiro =  putStrLn "1 - Guerreiro: Guerreiros combinam força, liderança e vasto conhecimento em armas e armaduras para criar o caos no campo de batalha."
+
+printInfoPaladino :: IO()
+printInfoPaladino = putStrLn "2 - Paladino: Estes guerreiros sagrados estão equipados com armaduras de placas para enfrentar os inimigos mais perigosos e são adeptos da benção da Luz que lhes permite curar feridas."
+
+printInfoCacador :: IO()
+printInfoCacador = putStrLn "3 - Caçador: Apesar de suas armas à distância serem extremamente eficientes, os caçadores se encontram em desvantagem quando seus inimigos aproximam para o combate corpo a corpo."
+
+printInfoMago :: IO()
+printInfoMago = putStrLn "4 - Mago: Apesar de dominarem poderosas magias ofensivas, os magos são frágeis e usam armaduras leves deixando-os particularmente vulneráveis contra ataques corpo a corpo"
+
+printClasses :: IO()
+printClasses = do
+  putStrLn ""
+  putStrLn "------------- Escolha a classe que seu personagem irá pertencer -------------"
+  putStrLn ""
+  printInfoGuerreiro
+  putStrLn ""
+  printInfoPaladino
+  putStrLn ""
+  printInfoCacador
+  putStrLn ""
+  printInfoMago
+  putStrLn "-----------------------------------------------------------------------------"
+  putStrLn ""
+
+-- Compara atributos do player e do inimigo (ataque, defesa, defesaMagica e velocidade) - Se o resultado for negativo: Inimigo ganha. Se for positivo: Player ganha a luta
+comparaTodosOsAtributos :: Player -> Inimigo -> Int
+comparaTodosOsAtributos j i = (comparaAtributo (ataqueDoJogador j) (ataqueDoInimigo i)) + (comparaAtributo(defesaDoJogador j) (defesaDoInimigo i)) + (comparaAtributo(defesaMagicaDoJogador j) (defesaMagicaDoInimigo i)) + (comparaAtributo(velocidadeDoJogador j) (velocidadeDoInimigo i))
+
+--Imprime todas as comparacoes dado um player e um inimigo
+printComparacoes :: Player -> Inimigo -> IO()
+printComparacoes j i = do
+  putStrLn ""
+  putStrLn ("---------------- " ++ (nomeDoJogador j) ++ " x " ++ (nomeDoInimigo i) ++ " ----------------")
+  putStrLn ""
+  printComparacaoAtaque j i
+  printComparacaoDefesa j i
+  printComparacaoDefesaMagica j i
+  printComparacaoVelocidade j i
+  putStrLn ""
+  putStrLn "-------------------------------------------------------------------"
+  putStrLn ""
+
+
+--Abaixo, métodos auxiliares que comparam e imprimem a comparacao de atributos entre player e inimigo, usados em printComparacoes!!
+printComparacaoAtaque :: Player -> Inimigo -> IO()
+printComparacaoAtaque j i
+  | (comparaAtributo (ataqueDoJogador j) (ataqueDoInimigo i)) == 1 = putStrLn ("ATAQUE: " ++ show (ataqueDoJogador j) ++ " >= " ++ show (ataqueDoInimigo i))
+  | otherwise = putStrLn ("ATAQUE: " ++ show (ataqueDoJogador j) ++ " < " ++ show (ataqueDoInimigo i))
+
+printComparacaoDefesa :: Player -> Inimigo -> IO()
+printComparacaoDefesa j i
+  | (comparaAtributo (defesaDoJogador j) (defesaDoInimigo i)) == 1 = putStrLn ("DEFESA: " ++ show (defesaDoJogador j) ++ " >= " ++ show (defesaDoInimigo i))
+  | otherwise = putStrLn ("DEFESA: " ++ show (defesaDoJogador j) ++ " < " ++ show (defesaDoInimigo i))
+
+printComparacaoDefesaMagica :: Player -> Inimigo -> IO()
+printComparacaoDefesaMagica j i
+  | (comparaAtributo (defesaMagicaDoJogador j) (defesaMagicaDoInimigo i)) == 1 = putStrLn ("DEFESA MÁGICA: " ++ show (defesaMagicaDoJogador j) ++ " >= " ++ show (defesaMagicaDoInimigo i))
+  | otherwise = putStrLn ("DEFESA MÁGICA: " ++ show (defesaMagicaDoJogador j) ++ " < " ++ show (defesaMagicaDoInimigo i))
+
+printComparacaoVelocidade :: Player -> Inimigo -> IO()
+printComparacaoVelocidade j i
+  | (comparaAtributo (velocidadeDoJogador j) (velocidadeDoInimigo i)) == 1 = putStrLn ("VELOCIDADE" ++ show (velocidadeDoJogador j) ++ " >= " ++ show (velocidadeDoInimigo i))
+  | otherwise = putStrLn ("VELOCIDADE: "++ show (velocidadeDoJogador j) ++ " < " ++ show (velocidadeDoInimigo i))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{-- REFACTORING THIS
+gerenciadorDeEscolhas 1 jogador inimigo = do
   printEscolhas 1
   let a = receiveDamageByPlayer (ataqueDoJogador jogador) inimigo
-  return (jogador, a )
+  return (jogador, a)
 
-  
-  
-  
 
-  
+
+
+
+
 
 
 
@@ -163,32 +288,34 @@ seletorDeAcoes j defesa defesaMagica = do
      let escolha = read entrada :: Int
      putStr ""
      printEscolhas escolha
-     
-       
-batleManager :: Player -> Inimigo -> Bool
-batleManager jogador inimigo  | ( hpDoJogador jogador <= 0 || hpDoInimigo inimigo <= 0) = if (hpDoJogador jogador <= 0) then False else True
-                              | otherwise = do
-                                 printAcoes                              
-                                 x <- getLine
-                                 let escolha = read x :: Int
-                                 let a = gerenciadorDeEscolhas escolha jogador inimigo
-                                 let novoJogador = fst a
-                                 let novoInimigo = snd a
-                                 return batleManager novoJogador novoInimigo
-                                                              
-                                                               
-                                                            
-                                                               
-                                                               
-                                                   
-                                                              
+
+
+batleManager jogador inimigo
+    | ((hpDoJogador jogador) <= 0) = do
+      putStrLn ""
+      return False
+    | ((hpDoInimigo inimigo) <= 0) = do
+      putStrLn ""
+      return False
+    | otherwise = do
+        printAcoes
+        x <- getLine
+        let escolha = read x :: Int
+        let a = gerenciadorDeEscolhas escolha jogador inimigo
+        let novoJogador = (fst a)
+        let novoInimigo = (snd a)
+        return batleManager (fst a) (snd a)
 
 
 
-       
-main =  do 
-  print $ "Digite o nome do seu jogador : "
-  nome <- getLine
-  let j =  criaPlayer nome
-  let i = criaInimigo "juju"
-  batleManager (hpDoJogador j) (manaDoJogador j) j i  (hpDoInimigo i)
+
+
+
+
+
+
+
+
+main =  do
+
+  batleManager (hpDoJogador j) (manaDoJogador j) j i  (hpDoInimigo i)--}
