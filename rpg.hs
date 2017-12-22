@@ -37,6 +37,7 @@ data Inimigo = Inimigo { nomeDoInimigo :: String
                        , defesaDoInimigo :: Int
                        , defesaMagicaDoInimigo :: Int
                        , xpDropDoInimigo :: Int {-Esse atributo indica quanto de xp o inimigo dara ao ser derrotado-}
+                       , levelDoInimigo :: Int {-Altera ativamente o ataque, defesa, agilidade, xp e vitalidade do inimigo-}
                        , inimigoIsAlive :: Bool
                        } deriving (Show)
 
@@ -45,7 +46,7 @@ criaPlayer :: String -> Player
 criaPlayer nome = Player nome 300 300 15 0 10 20 10 15 100 1 200 200 True
 {-Cria um Inimigo (Apenas teste) -}
 criaInimigo :: String -> Inimigo
-criaInimigo nome = Inimigo nome 300 300 15 0 10 20  True
+criaInimigo nome = Inimigo nome 300 300 15 0 10 20 1 True
 
 
 
@@ -116,7 +117,6 @@ receiveDamageByEnemy dano j
 
 printSeparator = putStrLn "-------------------------------------------------------------"
 
-
 printAcoes = do
                 putStrLn ""
                 printSeparator
@@ -136,8 +136,8 @@ printEscolhas x = putStrLn "Opção invalida : por favor selecione uma opção v
 
 receiveDamageByPlayer :: Int -> Inimigo -> Inimigo
 receiveDamageByPlayer dano i
-  | (((hpDoInimigo i) - dano) <= 0) = Inimigo (nomeDoInimigo i) ((hpDoInimigo i)-dano) (velocidadeDoInimigo i) (ataqueDoInimigo i) (defesaDoInimigo i) (defesaMagicaDoInimigo i) (xpDropDoInimigo i) (False)
-  | otherwise = Inimigo (nomeDoInimigo i) ((hpDoInimigo i)-dano) (velocidadeDoInimigo i) (ataqueDoInimigo i) (defesaDoInimigo i) (defesaMagicaDoInimigo i) (xpDropDoInimigo i) (inimigoIsAlive i)
+  | (((hpDoInimigo i) - dano) <= 0) = Inimigo (nomeDoInimigo i) ((hpDoInimigo i)-dano) (velocidadeDoInimigo i) (ataqueDoInimigo i) (defesaDoInimigo i) (defesaMagicaDoInimigo i) (xpDropDoInimigo i) (levelDoInimigo i) (False)
+  | otherwise = Inimigo (nomeDoInimigo i) ((hpDoInimigo i)-dano) (velocidadeDoInimigo i) (ataqueDoInimigo i) (defesaDoInimigo i) (defesaMagicaDoInimigo i) (xpDropDoInimigo i) (levelDoInimigo i) (inimigoIsAlive i)
 
 
 {-Nesse caso, nao estamos tratando ainda as multiplas escolhas, estamos fazendo "de conta" que a escolha é sempre a numero 1 (atacar inimigo)-}
@@ -315,7 +315,7 @@ printComparacaoDefesaMagica j i
 
 printComparacaoVelocidade :: Player -> Inimigo -> IO()
 printComparacaoVelocidade j i
-  | (comparaAtributo (velocidadeDoJogador j) (velocidadeDoInimigo i)) == 1 = putStrLn ("VELOCIDADE" ++ show (velocidadeDoJogador j) ++ " >= " ++ show (velocidadeDoInimigo i))
+  | (comparaAtributo (velocidadeDoJogador j) (velocidadeDoInimigo i)) == 1 = putStrLn ("VELOCIDADE: " ++ show (velocidadeDoJogador j) ++ " >= " ++ show (velocidadeDoInimigo i))
   | otherwise = putStrLn ("VELOCIDADE: "++ show (velocidadeDoJogador j) ++ " < " ++ show (velocidadeDoInimigo i))
 
 --Imprime todas as comparacoes dado um player e um inimigo
@@ -331,7 +331,6 @@ printComparacoes j i = do
   putStrLn ""
   putStrLn "-------------------------------------------------------------------"
   putStrLn ""
-
 
 
 
@@ -376,16 +375,17 @@ printDesejaContinuar = do
 
 enemyMaker :: Player -> IO Inimigo
 enemyMaker p = do
-  let nomes = ["Morcego","Dragão", "Troll","Goblin","Orc","Mago Negro","Rato","Barata" , "Demonio ","Harpia", "Cerberus","Cobra", "Espirito","Cavaleiro Negro","Corrompido"]
+  let nomes = ["Barata", "Rato", "Morcego", "Cobra", "Goblin", "Harpia", "Orc", "Mago Negro", "Troll", "Demonio", "Cerberus", "Espirito Perturbado", "Dragão", "Cavaleiro Negro", "Corrompido"]
   indiceDoNome <- randomRIO (0,14::Int)
-  hp <- randomRIO (0, ((hpDoJogador p)`div`2)::Int)
-  velocidade <- randomRIO (0, ((velocidadeDoJogador p) + 5)::Int)
-  ataque <- randomRIO (0, ((ataqueDoJogador p)*3)::Int)
-  defesa <- randomRIO (0, ((defesaDoJogador p)*2)::Int)
-  defesaMagica <- randomRIO (0, ((defesaMagicaDoJogador p)*2)::Int)
-  xpDrop <- randomRIO (0, 1000::Int)
-  return (Inimigo (nomes !! indiceDoNome) (hp) (velocidade) (ataque) (defesa) (defesaMagica) (xpDrop) (True))
-
+  nivel <- randomRIO (1, ((indiceDoNome)`div`3)::Int) {-Nivel dado randomicamente, contudo, monstros mais poderosos estao no final da lista e possuem indice maior, logo, poderao ter maior nivel maximo-}
+  hp <- (randomRIO (0, (((hpDoJogador p)`div`2)+(nivel*7))::Int))
+  velocidade <- randomRIO (0, ((velocidadeDoJogador p) + (nivel*2))::Int)
+  ataque <- randomRIO (0, ((ataqueDoJogador p)*nivel)::Int)
+  defesa <- randomRIO (0, ((defesaDoJogador p)*nivel)::Int)
+  defesaMagica <- randomRIO (0, ((defesaMagicaDoJogador p)*nivel)::Int)
+  xpDrop <- randomRIO (0, (500*nivel)::Int) {-Qtde será definida pelo nivel numa taxa de aleatoriedade de 1/5 entre [range(0,2000,500)]-}
+  return (Inimigo (nomes !! indiceDoNome) (hp) (velocidade) (ataque) (defesa) (defesaMagica) (xpDrop) (nivel) (True))
+  
 
 
 
